@@ -1,0 +1,10 @@
+---
+- name: Create external net
+  shell: >
+    source ~/keystonerc_admin && \
+    openstack network create --external --provider-network-type flat --provider-physical-network extnet external_net
+
+- name: Create external subnet
+  shell: >
+    source ~/keystonerc_admin && \
+    openstack subnet create --dhcp --allocation-pool start={{ network.dhcp.start }},end={{ network.dhcp.end }} --dns-nameserver {{ network.dns }} --network external_net --subnet-range {{ network.cidr }} external_subnet

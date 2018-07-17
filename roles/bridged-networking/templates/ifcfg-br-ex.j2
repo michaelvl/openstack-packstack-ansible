@@ -1,0 +1,9 @@
+DEVICE=br-ex
+DEVICETYPE=ovs
+TYPE=OVSBridge
+BOOTPROTO=static
+IPADDR={{ansible_eth0.ipv4.address}}
+NETMASK={{ansible_eth0.ipv4.netmask}}
+GATEWAY={{network.gw}}
+DNS1={{network.dns}}
+ONBOOT=yes

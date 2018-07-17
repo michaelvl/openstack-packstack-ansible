@@ -1,0 +1,20 @@
+---
+- hosts: openstack
+  roles:
+  - packstack
+  - provider-network-config
+  - bridged-networking
+  vars:
+    openstack:
+      version: queens
+      default_password: openstack
+      keystone_admin_password: openstack
+      tmp_path: /tmp/packstack
+    network:
+      nic: eth0
+      cidr: 192.168.2.0/24
+      dns: 192.168.2.1
+      gw: 192.168.2.1
+      dhcp:
+        start: 192.168.2.210
+        end: 192.168.2.220

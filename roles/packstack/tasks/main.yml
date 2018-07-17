@@ -1,0 +1,50 @@
+---
+- name: Update all packages
+  yum:
+    name: '*'
+    state: latest
+
+- name: Install openstack repo
+  yum:
+    name: centos-release-openstack-{{ openstack.version }}
+    state: present
+
+- name: Install packages
+  yum:
+    name: "{{ item }}"
+    state: latest
+    update_cache: yes
+  with_items:
+    - python2-setuptools
+    - yum-utils
+    - openstack-packstack
+    - openstack-nova-migration
+
+- name: Disable firewalld and network manager
+  shell: >
+    systemctl disable firewalld; systemctl stop firewalld; systemctl disable NetworkManager; systemctl stop NetworkManager; systemctl enable network; systemctl start network
+
+- name: Create working folder
+  file:
+    path: "{{ openstack.tmp_path }}"
+    state: directory
+
+- name: Generate initial packstack config file
+  shell: packstack --gen-answer-file={{ openstack.tmp_path }}/packstack-answer-file.cfg
+
+- name: Modify packstack answer file
+  lineinfile:
+    path: "{{ openstack.tmp_path }}/packstack-answer-file.cfg"
+    regexp: "{{ item.key }}="
+    line: "{{ item.key }}={{ item.value }}"
+  with_dict:
+    CONFIG_NEUTRON_OVS_BRIDGE_MAPPINGS: extnet:br-ex
+    CONFIG_PROVISION_DEMO: n
+    CONFIG_NEUTRON_OVS_BRIDGE_IFACES: "br-ex:{{ network.nic }}"
+    CONFIG_DEFAULT_PASSWORD: "{{ openstack.default_password }}"
+    CONFIG_KEYSTONE_ADMIN_PW: "{{ openstack.keystone_admin_password }}"
+    CONFIG_CINDER_VOLUMES_SIZE: 40G
+    CONFIG_HEAT_INSTALL: y
+
+- name: Run packstack
+  shell: packstack --answer-file={{ openstack.tmp_path }}/packstack-answer-file.cfg --debug --timeout=3600 | tee "{{ openstack.tmp_path }}/packstack.log"
